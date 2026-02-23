@@ -575,13 +575,63 @@ beacon_command_register(
 );
 
 alias netstat {
-	beacon_inline_execute($1, readbof($1, "netstat", $null, "T1049"), "go", $null);
+    local('$bid $args $choice $mask $has_v4 $has_v6 $has_tcp $has_udp');
+    $bid = $1;
+    
+    $mask = 0;
+
+    if (size(@_) <= 1) {
+        $mask = 0x1111;
+    } else {
+        $args = join(' ', sublist(@_, 1));
+		$has_v4 = 1;
+		$has_v6 = 1;
+		$has_tcp = 1;
+		$has_udp = 1;
+        if(indexOf($args, "ipv4") is $null){
+			$has_v4 = 0;
+		}
+		if(indexOf($args, "ipv6") is $null){
+			$has_v6 = 0;
+		}
+		if(indexOf($args, "tcp") is $null){
+			$has_tcp = 0;
+		}
+		if(indexOf($args, "udp") is $null){
+			$has_udp = 0;
+		}
+        if (!$has_v4 && !$has_v6) { $has_v4 = 1; $has_v6 = 1; }
+        if (!$has_tcp && !$has_udp) { $has_tcp = 1; $has_udp = 1; }
+		
+        if ($has_v4 && $has_tcp) { $mask = $mask | 0x0001; }
+        if ($has_v6 && $has_tcp) { $mask = $mask | 0x0010; }
+        if ($has_v4 && $has_udp) { $mask = $mask | 0x0100; }
+        if ($has_v6 && $has_udp) { $mask = $mask | 0x1000; }
+    }
+	beacon_inline_execute ($1, readbof($1, "netstat", $null, "T1049"), "go", pack("i", $mask));
 }
 
 beacon_command_register(
 	"netstat",
-	"get local ipv4 udp/tcp listening and connected ports",
-	"Synopsis: List listening and connected ipv4 udp and tcp connections"
+	"get local IPv4 and IPv6 udp/tcp listening and connected ports",
+	"
+Command: netstat
+Summary: This command displays local port infromation.
+Usage:   netstat [opt:ipv4] [opt:ipv6] [opt:tcp] [opt:udp] 
+
+Examples:
+	Display TCP and UDP ports for both IPv4 and IPv6:
+		netstat
+
+	Display only TCP ports for IPv4 and IPv6:
+		netstat tcp
+
+	Display only UDP ports for IPv6:
+		netstat ipv6 udp
+
+	Display TCP and UDP ports for IPv4:
+		netstat ipv4
+"
 );
 
 alias routeprint {
