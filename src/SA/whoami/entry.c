@@ -71,7 +71,7 @@ VOID* WhoamiGetTokenInfo(TOKEN_INFORMATION_CLASS TokenType)
                                  dwLength,
                                  &dwLength))
         {
-            internal_printf("ERROR 0x%x: could not get token information.\r\n", GetLastError());
+            internal_printf("ERROR 0x%x: could not get token information.\r\n", KERNEL32$GetLastError());
             goto cleanup;
         }
         pResult = pTokenInfo;
