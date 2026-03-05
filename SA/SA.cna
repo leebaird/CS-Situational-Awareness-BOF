@@ -1593,32 +1593,37 @@ Usage: get_password_policy [hostname]"
 
 alias probe
 {
-	local('$host $port $args $portint');
+	local('$host $port $timeout $args $portint');
 
 	if(size(@_) < 3)
 	{
-		berror($1, "usage: probe <host> <port>");
+		berror($1, "usage: probe <host> <port> <opt: timeout>");
 		return;
 	}
 	$host = $2;
 	$port = $3;
+	if(size(@_) == 4){
+		$timeout = $4;
+	}else{
+		$timeout = 5;
+	}
 	$portint = parseNumber($port, 10);
 	if ($portint < 1 || $portint > 65535) {
-		berror($1, "usage: probe <host> <port>");
+		berror($1, "usage: probe <host> <port> <opt: timeout>");
 		berror($1, "Port out of range");
 		return;
 	}
 
-	$args = bof_pack($1, "zi", $host, $port);
+	$args = bof_pack($1, "zii", $host, $port, $timeout);
 	beacon_inline_execute($1, readbof($1, "probe", $null, "T1046"), "go", $args);
 }
 
 beacon_command_register(
 	"probe",
-	"Check if a port is open",
+	"Check if a port is open. Default timeout is 5 seconds.",
 	"Command: probe
 
-Usage: probe <host> <port>"
+Usage: probe <host> <port> <opt: timeout>"
 );
 
 alias list_firewall_rules
